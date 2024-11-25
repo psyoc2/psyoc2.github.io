@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify
 import yfinance as yf
 
 app = Flask(__name__)
-
 # Use the OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
