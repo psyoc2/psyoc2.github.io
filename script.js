@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const sendButton = document.getElementById("send-button");
 
     // Display the initial question on page load
-    appendMessage("Hello! Enter the current date and time (YYYY-MM-DD HH:MM:SS):", "bot");
+    appendMessage("Enter the current date and time (YYYY-MM-DD HH:MM:SS):", "bot");
 
     sendButton.addEventListener("click", async function () {
         const userMessage = userInput.value.trim();
