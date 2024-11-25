@@ -1,3 +1,13 @@
+// When the page loads, initialize with the opening question
+window.onload = () => {
+    const chatBox = document.getElementById('chat-box');
+    const openingMessage = document.createElement('div');
+    openingMessage.className = 'bot-message';
+    openingMessage.textContent = "Hello! Enter the current date and time (YYYY-MM-DD HH:MM:SS):";
+    chatBox.appendChild(openingMessage);
+};
+
+// Handle user input and send to the server
 document.getElementById('send-button').addEventListener('click', () => {
     const userInput = document.getElementById('user-input').value;
     const chatBox = document.getElementById('chat-box');
@@ -25,6 +35,9 @@ document.getElementById('send-button').addEventListener('click', () => {
             botMessage.className = 'bot-message';
             botMessage.textContent = data.response;
             chatBox.appendChild(botMessage);
+
+            // Scroll chatbox to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
         })
         .catch(error => {
             console.error('Error:', error);
