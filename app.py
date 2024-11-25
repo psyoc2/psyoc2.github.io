@@ -1,44 +1,36 @@
-from flask import Flask, request, jsonify, render_template
-import openai
+from flask import Flask, request, jsonify
 import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+import openai
 
 app = Flask(__name__)
 
-# Load the OpenAI API key from environment variable
+# Load the OpenAI API key securely from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/get_stock_recommendation', methods=['POST'])
+@app.route("/get_stock_recommendation", methods=["POST"])
 def get_stock_recommendation():
+    data = request.json
+    user_responses = data.get("responses", [])
+
+    # Create a prompt based on user responses
+    prompt = (
+        f"The user has the following investment profile:\n"
+        f"1. Investment amount: {user_responses[0] if len(user_responses) > 0 else 'Not provided'}\n"
+        f"2. Sector: {user_responses[1] if len(user_responses) > 1 else 'Not provided'}\n"
+        f"3. Withdrawal criteria: {user_responses[2] if len(user_responses) > 2 else 'Not provided'}\n\n"
+        f"Based on this profile, recommend a single stock or investment strategy."
+    )
+
     try:
-        # Retrieve user inputs from the form
-        user_input = request.json.get('user_input')
-        if not user_input:
-            return jsonify({"error": "User input is required"}), 400
-
-        # Send the user's input to OpenAI for processing
+        # Use OpenAI to analyze the prompt
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a stock investment advisor."},
-                {"role": "user", "content": user_input}
-            ]
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
         )
-
-        # Parse and return the response from OpenAI
-        recommendation = response['choices'][0]['message']['content']
+        recommendation = response["choices"][0]["message"]["content"].strip()
         return jsonify({"recommendation": recommendation})
-    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    # Run the Flask app
+if __name__ == "__main__":
     app.run(debug=True)
