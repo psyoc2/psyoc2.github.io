@@ -16,7 +16,7 @@ conversation_state = {
 
 # Questions flow
 questions = [
-    "Hello! Enter the current date and time (YYYY-MM-DD HH:MM:SS):",
+    "Enter the current date and time (YYYY-MM-DD HH:MM:SS):",
     "How much money do you have to invest?",
     "What is your risk tolerance (e.g., 'I want to withdraw if I lose $5')?",
     "What industry would you like to invest in (e.g., technology, healthcare)?"
@@ -67,17 +67,17 @@ def process():
     # Determine the current step
     current_step = conversation_state["current_step"]
 
-    if current_step < len(questions):
-        # Store the user's response based on the current step
-        if current_step == 1:
-            conversation_state["responses"]["budget"] = user_response
-        elif current_step == 2:
-            conversation_state["responses"]["risk_tolerance"] = user_response
-        elif current_step == 3:
-            conversation_state["responses"]["industry"] = user_response
+    if current_step == 0:  # Asking for the date and time
+        conversation_state["responses"]["date_time"] = user_response
+    elif current_step == 1:  # Asking for the budget
+        conversation_state["responses"]["budget"] = user_response
+    elif current_step == 2:  # Asking for risk tolerance
+        conversation_state["responses"]["risk_tolerance"] = user_response
+    elif current_step == 3:  # Asking for industry
+        conversation_state["responses"]["industry"] = user_response
 
-        # Move to the next step
-        conversation_state["current_step"] += 1
+    # Move to the next step
+    conversation_state["current_step"] += 1
 
     # If all steps are complete, process investment preferences
     if conversation_state["current_step"] >= len(questions):
