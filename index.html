@@ -4,15 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Advisor Chatbot</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 60%;
+            max-width: 700px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .chat-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .chat-box {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .chat-message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #dfffe0;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #ffe0e0;
+        }
+        .chat-input-container {
+            display: flex;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        #send {
+            padding: 10px 15px;
+            font-size: 1em;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #send:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
-        <h1>Stock Advisor Chatbot</h1>
-        <div id="chat-box" class="chat-box"></div>
-        <div class="input-container">
-            <input id="user-input" type="text" placeholder="Type your response here..." />
-            <button id="send-button">Send</button>
+        <div class="chat-header">Stock Advisor Chatbot</div>
+        <div id="chat-container" class="chat-box">
+            <div class="bot-message chat-message">
+                Enter the current date and time (YYYY-MM-DD HH:MM:SS):
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="user-input" placeholder="Type your response here..." />
+            <button id="send">Send</button>
         </div>
     </div>
     <script src="script.js"></script>
