@@ -1,49 +1,45 @@
-// When the page loads, initialize with the opening question
-window.onload = () => {
-    const chatBox = document.getElementById('chat-box');
-    const openingMessage = document.createElement('div');
-    openingMessage.className = 'bot-message';
-    openingMessage.textContent = "Hello! Enter the current date and time (YYYY-MM-DD HH:MM:SS):";
-    chatBox.appendChild(openingMessage);
-};
+document.getElementById("send-btn").addEventListener("click", function () {
+    const userInput = document.getElementById("user-input").value;
+    if (!userInput.trim()) return;
 
-// Handle user input and send to the server
-document.getElementById('send-button').addEventListener('click', () => {
-    const userInput = document.getElementById('user-input').value;
-    const chatBox = document.getElementById('chat-box');
+    // Add user message to the chatbox
+    addMessageToChatbox(userInput, "user");
 
-    if (!userInput) return;
+    // Clear the input field
+    document.getElementById("user-input").value = "";
 
-    // Display user message
-    const userMessage = document.createElement('div');
-    userMessage.className = 'user-message';
-    userMessage.textContent = userInput;
-    chatBox.appendChild(userMessage);
-
-    // Clear input field
-    document.getElementById('user-input').value = '';
-
-    // Fetch response from backend
-    fetch('/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_input: userInput })
+    // Send the user input to the server
+    fetch("/process", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userInput }),
     })
-        .then(response => response.json())
-        .then(data => {
-            const botMessage = document.createElement('div');
-            botMessage.className = 'bot-message';
-            botMessage.textContent = data.response;
-            chatBox.appendChild(botMessage);
-
-            // Scroll chatbox to the bottom
-            chatBox.scrollTop = chatBox.scrollHeight;
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
         })
-        .catch(error => {
-            console.error('Error:', error);
-            const botMessage = document.createElement('div');
-            botMessage.className = 'bot-message';
-            botMessage.textContent = "Sorry, something went wrong. Please try again.";
-            chatBox.appendChild(botMessage);
+        .then((data) => {
+            if (data.response) {
+                addMessageToChatbox(data.response, "bot");
+            } else {
+                throw new Error("Invalid response from server");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            addMessageToChatbox("Sorry, something went wrong. Please try again.", "bot");
         });
 });
+
+function addMessageToChatbox(message, sender) {
+    const chatBox = document.getElementById("chat-box");
+    const messageDiv = document.createElement("div");
+    messageDiv.className = sender;
+    messageDiv.textContent = message;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
