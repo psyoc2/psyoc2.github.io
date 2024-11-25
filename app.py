@@ -17,7 +17,7 @@ def process():
         if not user_message:
             return jsonify({"error": "Message is required"}), 400
 
-        # Example OpenAI call
+        # Call OpenAI API with the user's message
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
