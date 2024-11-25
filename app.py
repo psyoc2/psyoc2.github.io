@@ -1,65 +1,92 @@
-from flask import Flask, request, jsonify
-import openai
-import yfinance as yf
 import os
+import openai
+from flask import Flask, request, jsonify
+import yfinance as yf
 
 app = Flask(__name__)
 
-# Load OpenAI API key from environment variables
+# Use the OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Global variable to track the conversation state
+conversation_state = {
+    "current_step": 0,  # Tracks which question to ask next
+    "responses": {}     # Stores responses to previous questions
+}
+
+# Questions flow
+questions = [
+    "Hello! Enter the current date and time (YYYY-MM-DD HH:MM:SS):",
+    "How much money do you have to invest?",
+    "What is your risk tolerance (e.g., 'I want to withdraw if I lose $5')?",
+    "What industry would you like to invest in (e.g., technology, healthcare)?"
+]
+
+def analyze_investment_preferences(responses):
+    budget = responses.get("budget", 0)
+    risk_tolerance = responses.get("risk_tolerance", 0)
+    industry = responses.get("industry", "technology")
+
+    tech_stocks = ["AAPL", "MSFT", "GOOGL", "AMD", "NVDA"]
+    stock_data = {}
+
+    for stock in tech_stocks:
+        try:
+            ticker = yf.Ticker(stock)
+            history = ticker.history(period="1y")
+            if not history.empty:
+                stock_data[stock] = history["Close"].iloc[-1]
+        except Exception as e:
+            print(f"Error fetching data for {stock}: {e}")
+
+    # Build LLM prompt
+    prompt = f"""
+    The user has ${budget} to invest in the {industry} industry and wants to withdraw if they lose more than ${risk_tolerance}. 
+    Based on the following stock prices: {stock_data}, recommend one specific stock they should invest in. 
+    Justify your choice briefly and ensure it aligns with the user's criteria.
+    """
+
+    # Call OpenAI API
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error analyzing investment preferences: {str(e)}"
 
 @app.route("/process", methods=["POST"])
 def process():
-    try:
-        # Get user message from the frontend
-        user_input = request.json.get("message")
-        if not user_input:
-            return jsonify({"error": "No input provided"}), 400
+    global conversation_state
 
-        # Example: Handle the investment-related input
-        if "Enter the current date and time" in user_input:
-            return jsonify({"response": "What are your investment preferences?"})
+    # Get user input from frontend
+    data = request.json
+    user_response = data.get("message", "")
 
-        # Example: Parse and process investment preferences
-        elif "I have" in user_input and "invest" in user_input:
-            preferences = user_input
-            # Example: Extract values from user input (dummy values here)
-            budget = 3
-            risk_tolerance = 2
-            industry = "technology"
+    # Determine the current step
+    current_step = conversation_state["current_step"]
 
-            # Fetch stock data
-            tech_stocks = ["AAPL", "MSFT", "GOOGL", "AMD", "NVDA"]
-            stock_data = {}
-            for stock in tech_stocks:
-                try:
-                    ticker = yf.Ticker(stock)
-                    history = ticker.history(period="1y")
-                    if not history.empty:
-                        stock_data[stock] = history["Close"].iloc[-1]  # Last closing price
-                except Exception as e:
-                    print(f"Error fetching data for {stock}: {e}")
+    if current_step < len(questions):
+        # Store the user's response based on the current step
+        if current_step == 1:
+            conversation_state["responses"]["budget"] = user_response
+        elif current_step == 2:
+            conversation_state["responses"]["risk_tolerance"] = user_response
+        elif current_step == 3:
+            conversation_state["responses"]["industry"] = user_response
 
-            # Build OpenAI prompt
-            prompt = f"""
-            The user has ${budget} to invest in the {industry} industry and wants to withdraw if they lose more than ${risk_tolerance}.
-            Based on the following stock prices: {stock_data}, recommend one specific stock they should invest in.
-            Justify your choice briefly and ensure it aligns with the user's criteria.
-            """
+        # Move to the next step
+        conversation_state["current_step"] += 1
 
-            # Generate recommendation
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return jsonify({"response": response['choices'][0]['message']['content']})
+    # If all steps are complete, process investment preferences
+    if conversation_state["current_step"] >= len(questions):
+        recommendation = analyze_investment_preferences(conversation_state["responses"])
+        return jsonify({"message": recommendation})
 
-        else:
-            return jsonify({"response": "Sorry, I didn't understand your input. Could you clarify?"})
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": "Sorry, something went wrong. Please try again."}), 500
+    # Otherwise, send the next question
+    next_question = questions[conversation_state["current_step"]]
+    return jsonify({"message": next_question})
 
 if __name__ == "__main__":
     app.run(debug=True)
