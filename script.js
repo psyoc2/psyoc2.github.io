@@ -1,14 +1,14 @@
 document.getElementById("send").addEventListener("click", async () => {
     const input = document.getElementById("user-input").value;
-    const chatContainer = document.getElementById("chat-container");
+    const responseDiv = document.getElementById("response");
 
-    if (!input) return;
+    if (!input) {
+        responseDiv.textContent = "Please enter a question.";
+        return;
+    }
 
-    // Add user message to chat
-    const userMessage = document.createElement("div");
-    userMessage.className = "user-message chat-message";
-    userMessage.textContent = input;
-    chatContainer.appendChild(userMessage);
+    // Clear the response area and show a loading message
+    responseDiv.textContent = "Loading...";
 
     try {
         const response = await fetch("/process", {
@@ -19,25 +19,12 @@ document.getElementById("send").addEventListener("click", async () => {
 
         const data = await response.json();
 
-        // Add bot response to chat
-        const botMessage = document.createElement("div");
-        botMessage.className = "bot-message chat-message";
-
         if (response.ok) {
-            botMessage.textContent = data.response;
+            responseDiv.textContent = data.response;
         } else {
-            botMessage.textContent = `Error: ${data.error}`;
+            responseDiv.textContent = `Error: ${data.error}`;
         }
-
-        chatContainer.appendChild(botMessage);
-
     } catch (error) {
-        const errorMessage = document.createElement("div");
-        errorMessage.className = "bot-message chat-message";
-        errorMessage.textContent = `Network Error: ${error.message}`;
-        chatContainer.appendChild(errorMessage);
+        responseDiv.textContent = `Network Error: ${error.message}`;
     }
-
-    // Clear input
-    document.getElementById("user-input").value = "";
 });
