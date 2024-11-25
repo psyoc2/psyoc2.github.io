@@ -1,39 +1,43 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const chatBox = document.getElementById("chat-box");
-    const userInput = document.getElementById("user-input");
-    const sendButton = document.getElementById("send-button");
+document.getElementById("send").addEventListener("click", async () => {
+    const input = document.getElementById("user-input").value;
+    const chatContainer = document.getElementById("chat-container");
 
-    // Display the initial question on page load
-    appendMessage("Enter the current date and time (YYYY-MM-DD HH:MM:SS):", "bot");
+    if (!input) return;
 
-    sendButton.addEventListener("click", async function () {
-        const userMessage = userInput.value.trim();
-        if (!userMessage) return;
+    // Add user message to chat
+    const userMessage = document.createElement("div");
+    userMessage.className = "user-message chat-message";
+    userMessage.textContent = input;
+    chatContainer.appendChild(userMessage);
 
-        appendMessage(userMessage, "user");
-        userInput.value = "";
+    try {
+        const response = await fetch("/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: input }),
+        });
 
-        try {
-            const response = await fetch("/process", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ message: userMessage })
-            });
+        const data = await response.json();
 
-            const data = await response.json();
-            appendMessage(data.message, "bot");
-        } catch (error) {
-            appendMessage("Sorry, something went wrong. Please try again.", "bot");
+        // Add bot response to chat
+        const botMessage = document.createElement("div");
+        botMessage.className = "bot-message chat-message";
+
+        if (response.ok) {
+            botMessage.textContent = data.response;
+        } else {
+            botMessage.textContent = `Error: ${data.error}`;
         }
-    });
 
-    function appendMessage(message, sender) {
-        const messageElement = document.createElement("div");
-        messageElement.className = `message ${sender}`;
-        messageElement.textContent = message;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatContainer.appendChild(botMessage);
+
+    } catch (error) {
+        const errorMessage = document.createElement("div");
+        errorMessage.className = "bot-message chat-message";
+        errorMessage.textContent = `Network Error: ${error.message}`;
+        chatContainer.appendChild(errorMessage);
     }
+
+    // Clear input
+    document.getElementById("user-input").value = "";
 });
